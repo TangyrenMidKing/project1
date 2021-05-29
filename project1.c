@@ -3,26 +3,27 @@
 #include<string.h>
 #define MAX_PAS_LEN 500
 
-int base(int L, int bp, int* pas);
+// Instruction register.
+int op;
+int l;
+int m;
+// base pointer and stack pointer.
+int bp;
+int sp;
+int pc;
+// The posistion where the stack starts, use for print stack.
+int stack_start_point;
+char name[4];
+// Path array.
+int pas[MAX_PAS_LEN];
+
+int base(int L);
 
 int main(void)
 {
   FILE *fp;
   fp = fopen("input.txt", "r");
   int halt = 1;
-  // Instruction register.
-  int op;
-  int l;
-  int m;
-  // base pointer and stack pointer.
-  int bp;
-  int sp;
-  int pc;
-  // The posistion where the stack starts, use for print stack.
-  int stack_start_point;
-  char name[4];
-  // Path array.
-  int pas[MAX_PAS_LEN];
 
   // Initialize path array.
   for (int i = 0; i < MAX_PAS_LEN; i++)
@@ -41,8 +42,8 @@ int main(void)
   pc = 0;
   stack_start_point = bp;
 
-  printf("            PC   BP   SP   stack\n");
-  printf("            %d    %d   %d\n",pc,bp,sp);
+  printf("                    PC   BP   SP   stack\n");
+  printf("Initial values:     %d    %d   %d\n",pc,bp,sp);
 
   int old_pc = pc;
 
@@ -79,22 +80,22 @@ int main(void)
            case 2:
              strcpy(name,"ADD");
              sp --;
-             pas[sp] = pas[sp] + pas[sp + 1];
+             pas[sp] += pas[sp + 1];
              break;
            case 3:
              strcpy(name,"SUB");
              sp --;
-             pas[sp] = pas[sp] - pas[sp + 1];
+             pas[sp] -= pas[sp + 1];
              break;
            case 4:
              strcpy(name,"MUL");
              sp --;
-             pas[sp] = pas[sp] * pas[sp + 1];
+             pas[sp] *= pas[sp + 1];
              break;
            case 5:
              strcpy(name,"DIV");
              sp --;
-             pas[sp] = pas[sp] / pas[sp + 1];
+             pas[sp] /= pas[sp + 1];
              break;
            case 6:
              strcpy(name,"ODD");
@@ -103,7 +104,7 @@ int main(void)
            case 7:
              strcpy(name,"MOD");
              sp --;
-             pas[sp] = pas[sp] % pas[sp + 1];
+             pas[sp] %= pas[sp + 1];
              break;
            case 8:
              strcpy(name,"EQL");
@@ -145,20 +146,20 @@ int main(void)
       case 3:
         strcpy(name,"LOD");
         sp++;
-        pas[sp] = pas[base(l, bp, pas) + m];
+        pas[sp] = pas[base(l) + m];
         break;
       // 04 – STO L, M Store value at top of stack in the stack location at offset M
       // from L lexicographical levels down
       case 4:
         strcpy(name,"STO");
-        pas[base(l, bp, pas) + m] = pas[sp];
+        pas[base(l) + m] = pas[sp];
         sp--;
         break;
       // 05 – CAL L, M Call procedure at code index M (generates new
       // Activation Record and PC <- M)
       case 5:
         strcpy(name,"CAL");
-        pas[sp + 1] = base(l, bp, pas); // static link (SL)
+        pas[sp + 1] = base(l); // static link (SL)
         pas[sp + 2] = bp; // dynamic link (DL)
         pas[sp + 3] = pc; // return address (RA)
         bp = sp + 1;
@@ -207,7 +208,7 @@ int main(void)
     }
 
     // Print Required Output
-    printf("%2d %s %d %2d %2d   %2d   %d ",old_pc,name,l,m,pc,bp,sp);
+    printf("%2d   %s   %d   %2d   %2d   %2d   %d   ",old_pc,name,l,m,pc,bp,sp);
     old_pc = pc;
     for (int i = stack_start_point; i <= sp; i++)
     {
@@ -222,7 +223,7 @@ int main(void)
   return 0;
 }
 
-int base(int L, int bp, int* pas)
+int base(int L)
 {
   int arb = bp; // arb = activation record base
 
