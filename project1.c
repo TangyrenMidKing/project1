@@ -24,10 +24,10 @@ int pas[MAX_PAS_LEN];
 
 int base(int L);
 
-int main(void)
+int main(int argc, char *argv[])
 {
   FILE *fp;
-  fp = fopen("input.txt", "r");
+  fp = fopen(argv[1], "r");
   int halt = 1;
 
   // Initialize path array.
