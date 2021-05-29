@@ -1,5 +1,5 @@
 # project1
 cop3402
 
-Shibo Ding 
+Shibo Ding & 
 Jiahao Zhu
