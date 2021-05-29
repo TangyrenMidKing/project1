@@ -1,3 +1,8 @@
+// Shibo Ding
+// Jiahao Zhu
+// cop3402 spring 2021
+// Project1 VM
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
@@ -208,13 +213,13 @@ int main(void)
     }
 
     // Print Required Output
-    printf("%2d   %s   %d   %2d   %2d   %2d   %d   ",old_pc,name,l,m,pc,bp,sp);
+    printf("%2d   %s   %d   %2d   %2d   %2d   %d  ",old_pc,name,l,m,pc,bp,sp);
     old_pc = pc;
     for (int i = stack_start_point; i <= sp; i++)
     {
       if (i == bp && i != stack_start_point)
         printf("| ");
-      printf("%d ", pas[i]);
+      printf("%2d ", pas[i]);
     }
 
     printf("\n");
