@@ -7,6 +7,7 @@
 #include<stdlib.h>
 #include<string.h>
 #define MAX_PAS_LEN 500
+#define MAX_NUM_BAR 20
 
 // Instruction register.
 int op;
@@ -21,6 +22,9 @@ int stack_start_point;
 char name[4];
 // Path array.
 int pas[MAX_PAS_LEN];
+// Bar array.
+int bar[MAX_NUM_BAR];
+
 
 int base(int L);
 
@@ -36,7 +40,7 @@ int main(int argc, char *argv[])
 
   // Read the input to an array.
   int index = 0;
-  while (fscanf(fp, "%d", &pas[index]) == 1)
+  while(fscanf(fp, "%d", &pas[index]) != EOF)
   {
     index++;
   }
@@ -51,6 +55,8 @@ int main(int argc, char *argv[])
   printf("Initial values:     %d    %d   %d\n",pc,bp,sp);
 
   int old_pc = pc;
+  // Current index for bar array.
+  int k = 0;
 
   while (halt == 1)
   {
@@ -84,22 +90,22 @@ int main(int argc, char *argv[])
              break;
            case 2:
              strcpy(name,"ADD");
-             sp --;
+             sp = sp - 1;
              pas[sp] += pas[sp + 1];
              break;
            case 3:
              strcpy(name,"SUB");
-             sp --;
+             sp = sp - 1;
              pas[sp] -= pas[sp + 1];
              break;
            case 4:
              strcpy(name,"MUL");
-             sp --;
+             sp = sp - 1;
              pas[sp] *= pas[sp + 1];
              break;
            case 5:
              strcpy(name,"DIV");
-             sp --;
+             sp = sp - 1;
              pas[sp] /= pas[sp + 1];
              break;
            case 6:
@@ -108,38 +114,38 @@ int main(int argc, char *argv[])
             break;
            case 7:
              strcpy(name,"MOD");
-             sp --;
+             sp = sp - 1;
              pas[sp] %= pas[sp + 1];
              break;
            case 8:
              strcpy(name,"EQL");
-             sp --;
-             pas[sp] = (pas[sp] == pas[sp + 1]);
+             sp = sp - 1;
+             pas[sp] = (pas[sp] == pas[sp + 1]) ? 0 : 1;
              break;
            case 9:
              strcpy(name,"NEQ");
-             sp --;
-             pas[sp] = (pas[sp] != pas[sp + 1]);
+             sp = sp - 1;
+             pas[sp] = (pas[sp] != pas[sp + 1]) ? 0 : 1;
              break;
            case 10:
              strcpy(name,"LSS");
-             sp --;
-             pas[sp] = (pas[sp] < pas[sp + 1]);
+             sp = sp - 1;
+             pas[sp] = (pas[sp] < pas[sp + 1]) ? 0 : 1;
              break;
            case 11:
              strcpy(name,"LEQ");
-             sp --;
-             pas[sp] = (pas[sp] <= pas[sp + 1]);
+             sp = sp - 1;
+             pas[sp] = (pas[sp] <= pas[sp + 1]) ? 0 : 1;
              break;
            case 12:
              strcpy(name,"GTR");
-             sp --;
-             pas[sp] = (pas[sp] > pas[sp + 1]);
+             sp = sp - 1;
+             pas[sp] = (pas[sp] > pas[sp + 1]) ? 0 : 1;
              break;
            case 13:
              strcpy(name,"GEQ");
-             sp --;
-             pas[sp] = (pas[sp] >= pas[sp + 1]);
+             sp = sp - 1;
+             pas[sp] = (pas[sp] >= pas[sp + 1]) ? 0 : 1;
              break;
           default:
              printf("Wrong M!\n");
@@ -150,7 +156,7 @@ int main(int argc, char *argv[])
       // set M from L lexicographical levels down
       case 3:
         strcpy(name,"LOD");
-        sp++;
+        sp = sp + 1;
         pas[sp] = pas[base(l) + m];
         break;
       // 04 – STO L, M Store value at top of stack in the stack location at offset M
@@ -158,7 +164,7 @@ int main(int argc, char *argv[])
       case 4:
         strcpy(name,"STO");
         pas[base(l) + m] = pas[sp];
-        sp--;
+        sp = sp - 1;
         break;
       // 05 – CAL L, M Call procedure at code index M (generates new
       // Activation Record and PC <- M)
@@ -169,24 +175,25 @@ int main(int argc, char *argv[])
         pas[sp + 3] = pc; // return address (RA)
         bp = sp + 1;
         pc = m;
+        bar[k++] = bp; // save the bar position.
         break;
       // 06 – INC 0, M Allocate M memory words (increment SP by M). First four
       // are reserved to Static Link (SL), Dynamic Link (DL), Return Address (RA), and Parameter (P)
       case 6:
         strcpy(name,"INC");
-        sp += m;
+        sp = sp + m;
         break;
       // 07 – JMP 0, M Jump to instruction M (PC <- M)
       case 7:
         strcpy(name,"JMP");
-        pc = m ;
+        pc = m;
         break;
       // 08 – JPC 0, M Jump to instruction M if top stack element is 0
       case 8:
         strcpy(name,"JPC");
         if (pas[sp] == 1)
           pc = m;
-        sp--;
+        sp = sp - 1;
         break;
       // 09 – SYS 0, 1 Write the top stack element to the screen
       //      SYS 0, 2 Read in input from the user and store it on top of the stack
@@ -196,13 +203,14 @@ int main(int argc, char *argv[])
         if (m == 1)
         {
           printf("Output result is: %d\n", pas[sp]);
-          sp--;
+          sp = sp - 1;
         }
         else if (m == 2)
         {
-          sp++;
+          sp = sp + 1;
           printf("Please Enter an Integer: ");
           scanf("%d", &pas[sp]);
+          printf("\n");
         }
         else
           halt = 0;
@@ -215,11 +223,16 @@ int main(int argc, char *argv[])
     // Print Required Output
     printf("%2d   %s   %d   %2d   %2d   %2d   %d  ",old_pc,name,l,m,pc,bp,sp);
     old_pc = pc;
+
+
+
+    // Print the current stack.
     for (int i = stack_start_point; i <= sp; i++)
     {
-      if (i == bp && i != stack_start_point)
-        printf("| ");
-      printf("%2d ", pas[i]);
+      for (int j = 0; j <= k; j++)
+        if (i == bar[j])
+          printf("| ");
+      printf("%d ", pas[i]);
     }
 
     printf("\n");
